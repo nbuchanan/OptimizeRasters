@@ -542,7 +542,7 @@ class Base(object):
             self._m_msg_callback(msg, status)
 
     def isLinux(self):
-        return True if sys.platform.lower().startswith('linux') else False
+        return True if sys.platform.lower().startswith(('linux', 'darwin')) else False
 
     def copyBinaryToTmp(self, binarySrc, binaryDst):
         if (not os.path.exists(binaryDst)):
