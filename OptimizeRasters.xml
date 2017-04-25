@@ -1,20 +1,26 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <!--Please note: Paths and extensions defined herein are considered as case-sensitive in OptimizeRasters.py -->
 <OptimizeRasters>
+  <Description>Base configuration adjusted for running on macOS with GDAL 2 installed via Homebrew.</Description>
   <Defaults>
+
+    <!-- Override GDAL path -->
+    <GDALPATH>/usr/local/opt/gdal2/bin</GDALPATH>
+
     <!-- Acceptable modes are [mrf, mrf_jpeg, tif, tif_lzw, tif_jpeg, cachingmrf, clonemrf, splitmrf] -->
-    <Mode>mrf</Mode>
+    <Mode>rasterproxy</Mode>
     <!-- File extensions considered as (Rasters). These files will not be copied from the input path -->
-    <RasterFormatFilter>tif,TIF, mrf</RasterFormatFilter>
+    <RasterFormatFilter>tif,tiff,TIF,TIFF</RasterFormatFilter>
     <!-- File extensions to ignore completely while copying files/data from the input path -->
-    <ExcludeFilter>tmp, ovr, rrd, idx, lrc, mrf_cache, pjp, ppng, pft, pzp</ExcludeFilter>
+    <ExcludeFilter>tmp,rrd,idx,lrc,mrf_cache,pjp,ppng,pft,pzp,ovr,aux.xml,aux,tfw,TFW,pjg</ExcludeFilter>
     <!-- Compression to use on output (Rasters) -->
     <Compression>lerc</Compression>
-    <Interleave></Interleave>
+    <!--how the data is stored as Pixel interleave or band interleave. For cloneMRF the value should be the same as input (Def: pixel)-->
+    <Interleave>pixel</Interleave>
     <!-- Compression quality to apply for JPEG compression. (Def: 85) -->
     <Quality>85</Quality>
-    <!-- LERC precision to apply for LERC compression -->
-    <LERCPrecision></LERCPrecision>
+    <!--LERC precision to apply for LERC compression (Def: 0.5 for int data and 0.001 for float data). The default value is 0.001, which is lossless for integers.-->
+    <LERCPrecision>0.001</LERCPrecision>
     <!-- Build pyramids? Acceptable values are [true, yes, t, 1, y, false, no, f, 0, n, only, external] -->
     <BuildPyramids>true</BuildPyramids>
     <!-- Pyramid levels to create (Def:  2) -->
@@ -22,38 +28,47 @@
     <!-- Pyramid sampling [nearest,average,gauss,cubic,cubicspline,lanczos,average_mp,average_magphase,mode] (Def: average) -->
     <PyramidSampling>average</PyramidSampling>
     <!--  Pyramid compression [jpeg, lzw, deflate] (Def: jpeg) -->
-    <PyramidCompression>JPEG</PyramidCompression>
+    <PyramidCompression>jpeg</PyramidCompression>
     <!-- No data value. If undefined/empty value  -a_nodata will not be applied. (Def: undefined) -->
-    <NoDataValue></NoDataValue>
+    <NoDataValue>-9999</NoDataValue>
     <!-- Output tile size -->
     <BlockSize>512</BlockSize>
     <!-- This needs to specified when generating caching or clone MRF, the value should be based on the input raster pyramid factor default is 2  -->
-    <Scale></Scale>
-    <!-- ‘True’ to keep input raster extensions else outputs will be renamed to ‘mrf’. Acceptable values are [true, yes, t, 1, y, false, no, f, 0, n] -->
-    <KeepExtension>True</KeepExtension>
+    <Scale>2</Scale>
+    <!-- ‘true’ to keep input raster extensions else outputs will be renamed to ‘mrf’. Acceptable values are [true, yes, t, 1, y, false, no, f, 0, n] -->
+    <KeepExtension>true</KeepExtension>
     <!-- Simultaneous threads to use for parallel processing /instances of gdal_translate/gdal_addo/e.t.c (Def: 10) -->
     <Threads>10</Threads>
     <!-- Path where the logs will be stored -->
     <LogPath>.</LogPath>
     <!-- 'True' will scan for (Rasters) in sub-directories. Acceptable values are [true, yes, t, 1, y, false, no, f, 0, n] -->
-    <IncludeSubdirectories>True</IncludeSubdirectories>
+    <IncludeSubdirectories>true</IncludeSubdirectories>
+
+    <!--To upload processed data to cloud storage. Acceptable values are [true, yes, t, 1, y, false, no, f, 0, n]-->
+    <CloudUpload>false</CloudUpload>
+
+    <!--Output cloud storage type to upload data. Acceptable values are [Amazon, Azure]-->
+    <Out_Cloud_Type>amazon</Out_Cloud_Type>
     <Out_S3_AWS_ProfileName>default</Out_S3_AWS_ProfileName>
-    <Out_S3_ID>Out_S3_ID</Out_S3_ID>
-    <Out_S3_Secret>Out_S3_secret_key</Out_S3_Secret>
+    <Out_S3_ID></Out_S3_ID>
+    <Out_S3_Secret></Out_S3_Secret>
     <Out_S3_Bucket>Out_BucketName</Out_S3_Bucket>
     <!-- Set canned ACL to apply to uploaded files. Acceptable values are [private, public-read, public-read-write, authenticated-read, bucket-owner-read,bucket-owner-full-control]-->
-    <Out_S3_ACL></Out_S3_ACL>
+    <Out_S3_ACL>private</Out_S3_ACL>
     <!-- Starting output folder location to store converted data on S3-->
-    <Out_S3_ParentFolder>Out_S3Parent_folder</Out_S3_ParentFolder>
+    <Out_S3_ParentFolder>Out_S3ParentFolder</Out_S3_ParentFolder>
     <!-- If ‘true’ generated output files with any extra files copied from input will be uploaded to S3. Acceptable values are [true, yes, t, 1, y, false, no, f, 0, n] -->
     <Out_S3_Upload>F</Out_S3_Upload>
     <!-- If ‘true’ generated output will be deleted once uploaded to S3. Acceptable values are [true, yes, t, 1, y, false, no, f, 0, n] -->
     <Out_S3_DeleteAfterUpload>True</Out_S3_DeleteAfterUpload>
+
+    <!--Input cloud storage type to process/download data. Acceptable values are [Amazon, Azure]-->
+    <In_Cloud_Type>amazon</In_Cloud_Type>
     <In_S3_AWS_ProfileName>default</In_S3_AWS_ProfileName>
-    <In_S3_ID>In_S3_ID</In_S3_ID>
-    <In_S3_Secret>In_S3_Secret</In_S3_Secret>
+    <In_S3_ID></In_S3_ID>
+    <In_S3_Secret></In_S3_Secret>
     <In_S3_Bucket>In_BucketName</In_S3_Bucket>
     <!-- Starting input folder to scan for (Rasters) and to copy any other files that do not end with extensions in <ExcludeFilter> -->
-    <In_S3_ParentFolder>sampletest/02042014</In_S3_ParentFolder>
+    <In_S3_ParentFolder>In_S3ParentFolder</In_S3_ParentFolder>
   </Defaults>
 </OptimizeRasters>
