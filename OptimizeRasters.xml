@@ -20,7 +20,7 @@
     <!-- Compression quality to apply for JPEG compression. (Def: 85) -->
     <Quality>85</Quality>
     <!--LERC precision to apply for LERC compression (Def: 0.5 for int data and 0.001 for float data). The default value is 0.001, which is lossless for integers.-->
-    <LERCPrecision>0.001</LERCPrecision>
+    <LERCPrecision></LERCPrecision>
     <!-- Build pyramids? Acceptable values are [true, yes, t, 1, y, false, no, f, 0, n, only, external] -->
     <BuildPyramids>true</BuildPyramids>
     <!-- Pyramid levels to create (Def:  2) -->
@@ -58,9 +58,9 @@
     <!-- Starting output folder location to store converted data on S3-->
     <Out_S3_ParentFolder>Out_S3ParentFolder</Out_S3_ParentFolder>
     <!-- If ‘true’ generated output files with any extra files copied from input will be uploaded to S3. Acceptable values are [true, yes, t, 1, y, false, no, f, 0, n] -->
-    <Out_S3_Upload>F</Out_S3_Upload>
+    <Out_S3_Upload>false</Out_S3_Upload>
     <!-- If ‘true’ generated output will be deleted once uploaded to S3. Acceptable values are [true, yes, t, 1, y, false, no, f, 0, n] -->
-    <Out_S3_DeleteAfterUpload>True</Out_S3_DeleteAfterUpload>
+    <Out_S3_DeleteAfterUpload>true</Out_S3_DeleteAfterUpload>
 
     <!--Input cloud storage type to process/download data. Acceptable values are [Amazon, Azure]-->
     <In_Cloud_Type>amazon</In_Cloud_Type>
