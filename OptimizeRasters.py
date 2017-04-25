@@ -94,6 +94,7 @@ CLOAD_RESTORE_POINT = '__LOAD_RESTORE_POINT__'
 CCMD_ARG_INPUT = '__CMD_ARG_INPUT__'
 
 CVSICURL_PREFIX = '/vsicurl/'
+CVSIS3_PREFIX = '/vsis3/'
 
 # utility const
 CSIN_UPL = 'SIN_UPL'
@@ -151,6 +152,8 @@ COP = 'Op'
 CCLOUD_UPLOAD_THREADS = 20          # applies to both (azure and amazon/s3)
 CCLOUD_UPLOAD = 'CloudUpload'
 CCLOUD_UPLOAD_OLD_KEY = 'Out_S3_Upload'
+CCLOUD_AMAZON_KEY_ID = 'AWS_ACCESS_KEY_ID'
+CCLOUD_AMAZON_KEY_SECRET = 'AWS_SECRET_ACCESS_KEY'
 COUT_CLOUD_TYPE = 'Out_Cloud_Type'
 COUT_S3_PARENTFOLDER = 'Out_S3_ParentFolder'
 COUT_S3_ACL = 'Out_S3_ACL'
@@ -973,7 +976,7 @@ class UpdateMRF:
                 if (usrPath):
                     (usrPath, usrPathPos) = usrPath.split(CHASH_DEF_SPLIT_CHAR)
                 _rasterSource = '{}{}'.format(self._outputURLPrefix, _rasterSource.replace(self._homePath, ''))
-                if (_rasterSource.startswith('/vsicurl/')):
+                if (_rasterSource.startswith((CVSICURL_PREFIX, CVSIS3_PREFIX))):
                     _rasterSource = self._base.urlEncode(_rasterSource)
                 if (usrPath):
                     _idx = _rasterSource.find(self._base.getUserConfiguration.getValue(CCFG_PRIVATE_OUTPUT, False))
@@ -2832,6 +2835,7 @@ class compression(object):
         self.CGDAL_TRANSLATE_EXE = 'gdal_translate'
         self.CGDAL_BUILDVRT_EXE = 'gdalbuildvrt'
         self.CGDAL_ADDO_EXE = 'gdaladdo'
+        self.CGDAL_CONFIG_FLAG = '--config'
         self.m_id = None
         self.m_user_config = None
         self._base = base
@@ -2952,9 +2956,9 @@ class compression(object):
             do_process = (_rpt and _rpt.operation != COP_NOCONVERT) and not isModeClone
             if (not do_process):
                 self.message('[CPY] {}'.format(_input_file))
-                if (input_file.startswith('/vsicurl/')):
+                if (input_file.startswith(CVSICURL_PREFIX)):
                     try:
-                        _dn_vsicurl_ = input_file.split('/vsicurl/')[1]
+                        _dn_vsicurl_ = input_file.split(CVSICURL_PREFIX)[1]
                         file_url = urllib2.urlopen(_dn_vsicurl_)
                         validateForClone = isModeClone
                         with open(output_file, 'wb') as fp:
@@ -3027,8 +3031,8 @@ class compression(object):
                 else:
                     args = args_callback(args, [input_file, output_file, self.m_user_config, self._base])      # callback user function to get arguments.
                 if (_rpt):
-                    if (input_file.startswith('/vsicurl/')):
-                        trueFile = input_file.replace('/vsicurl/', '')
+                    if (input_file.startswith(CVSICURL_PREFIX)):
+                        trueFile = input_file.replace(CVSICURL_PREFIX, '')
                         if (trueFile in _rpt._input_list_info and
                                 Report.CRPT_URL_TRUENAME in _rpt._input_list_info[trueFile]):
                             (urlFileName, urlExt) = os.path.splitext(os.path.join(output_file.split('?')[0], _rpt._input_list_info[trueFile][Report.CRPT_URL_TRUENAME]))
@@ -3042,6 +3046,16 @@ class compression(object):
                                     os.makedirs(createPath)
                             except Exception as e:
                                 self.message(str(e), self._base.const_critical_text)
+                    elif (input_file.startswith(CVSIS3_PREFIX)):
+                        if (self.m_user_config.getValue(CIN_CLOUD_TYPE) == CCLOUD_AMAZON):
+                            # Add AWS credentials if using the /vsis3/ approach
+                            self.message('Adding AWS credentials for {} process'.format(self.CGDAL_TRANSLATE_EXE))
+                            args.append(self.CGDAL_CONFIG_FLAG)
+                            args.append('{}'.format(CCLOUD_AMAZON_KEY_ID))
+                            args.append('"{}"'.format(self.m_user_config.getValue('In_S3_ID', toLower=False)))
+                            args.append(self.CGDAL_CONFIG_FLAG)
+                            args.append('{}'.format(CCLOUD_AMAZON_KEY_SECRET))
+                            args.append('"{}"'.format(self.m_user_config.getValue('In_S3_Secret', toLower=False)))
                 args.append(self._base.urlEncode(input_file) if _vsicurl_input and input_file.find(CPLANET_IDENTIFY) == -1 and not isTempInput else '"{}"'.format(input_file))
                 args.append('"{}"'.format(output_file))
                 self.message('Applying compression (%s)' % (input_file))
@@ -3329,7 +3343,7 @@ def getInputOutput(inputfldr, outputfldr, file, isinput_s3):
     ifile_toLower = input_file.lower()
     if (ifile_toLower.startswith('http://') or
             ifile_toLower.startswith('https://')):
-        cfg.setValue(CIN_S3_PREFIX, '/vsicurl/')
+        cfg.setValue(CIN_S3_PREFIX, CVSICURL_PREFIX)
         input_file = input_file.replace('\\', '/')
         isinput_s3 = True
     if (isinput_s3):
@@ -3448,6 +3462,10 @@ def fn_copy_temp_dst(input_source, cb_args, *args):
         fn_cpy_.batch(files, {'mode': 'move'}, None)
     return True
 
+
+def get_vsi_prefix(s3_bucket_object):
+    # Use vsis3 approach if bucket is not public
+    return '{}{}/'.format(CVSIS3_PREFIX, s3_bucket_object.m_bucketname) if not s3_bucket_object._isBucketPublic else '{}http://{}.{}/'.format(CVSICURL_PREFIX, s3_bucket_object.m_bucketname, CINOUT_S3_DEFAULT_DOMAIN)
 
 class Args:
 
@@ -4131,9 +4149,7 @@ class Application(object):
                     self._base.message(err_init_msg.format('S3'), const_critical_text)
                     return(terminate(self._base, eFAIL))
                 S3_storage.inputPath = self._args.output
-                cfg.setValue(COUT_VSICURL_PREFIX, '/vsicurl/{}{}'.format(S3_storage.bucketupload.generate_url(0).split('?')[0].replace('https', 'http'),
-                                                                         cfg.getValue(COUT_S3_PARENTFOLDER, False)) if not S3_storage._isBucketPublic else
-                             '/vsicurl/http://{}.{}/{}'.format(S3_storage.m_bucketname, CINOUT_S3_DEFAULT_DOMAIN, cfg.getValue(COUT_S3_PARENTFOLDER, False)))
+                cfg.setValue(COUT_VSICURL_PREFIX, '{}{}'.format(get_vsi_prefix(S3_storage), cfg.getValue(COUT_S3_PARENTFOLDER, False)))
                 # ends
             elif (cfg.getValue(COUT_CLOUD_TYPE, True) == CCLOUD_AZURE):
                 _account_name = cfg.getValue(COUT_AZURE_ACCOUNTNAME, False)
@@ -4156,7 +4172,7 @@ class Application(object):
                 if (not azure_storage.init()):
                     self._base.message(err_init_msg.format(CCLOUD_AZURE.capitalize()), self._base.const_critical_text)
                     return(terminate(self._base, eFAIL))
-                cfg.setValue(COUT_VSICURL_PREFIX, '/vsicurl/{}{}'.format('http://{}.blob.core.windows.net/{}/'.format(azure_storage.getAccountName, _container),
+                cfg.setValue(COUT_VSICURL_PREFIX, '{}{}{}'.format(CVSICURL_PREFIX, 'http://{}.blob.core.windows.net/{}/'.format(azure_storage.getAccountName, _container),
                                                                          self._args.output if self._args.output else cfg.getValue(COUT_S3_PARENTFOLDER, False)))
             else:
                 self._base.message('Invalid value for ({})'.format(COUT_CLOUD_TYPE), const_critical_text)
@@ -4243,11 +4259,16 @@ class Application(object):
                     self._base.message('Unable to initialize S3-storage! Quitting..', self._base.const_critical_text)
                     return(terminate(self._base, eFAIL))
                 if (str(o_S3_storage.bucketupload.connection).lower().endswith('.ecstestdrive.com')):   # handles EMC namespace cloud urls differently
-                    cfg.setValue(CIN_S3_PREFIX, '/vsicurl/http://{}.public.ecstestdrive.com/{}/'.format(
+                    cfg.setValue(CIN_S3_PREFIX, '{}http://{}.public.ecstestdrive.com/{}/'.format(CVSICURL_PREFIX,
                         o_S3_storage.bucketupload.connection.aws_access_key_id.split('@')[0], o_S3_storage.m_bucketname))
                 else:   # for all other standard cloud urls
-                    cfg.setValue(CIN_S3_PREFIX, '/vsicurl/{}'.format(o_S3_storage.bucketupload.generate_url(0).split('?')[0]).replace('https', 'http') if not o_S3_storage._isBucketPublic else
-                                 '/vsicurl/http://{}.{}/'.format(o_S3_storage.m_bucketname, CINOUT_S3_DEFAULT_DOMAIN))  # vsicurl doesn't like 'https'
+                    s3_prefix_val = ''
+                    # Use vsis3 approach if bucket is not public
+                    if not o_S3_storage._isBucketPublic:
+                        s3_prefix_val = '{}{}/'.format(CVSIS3_PREFIX, o_S3_storage.m_bucketname)
+                    else:
+                        s3_prefix_val = '{}http://{}.{}/'.format(CVSICURL_PREFIX, o_S3_storage.m_bucketname, CINOUT_S3_DEFAULT_DOMAIN)
+                    cfg.setValue(CIN_S3_PREFIX, s3_prefix_val)
                 o_S3_storage.inputPath = self._args.output
                 if (not o_S3_storage.getS3Content(o_S3_storage.remote_path, o_S3_storage.S3_copy_to_local, exclude_callback)):
                     self._base.message('Unable to read S3-Content', self._base.const_critical_text)
@@ -4269,7 +4290,7 @@ class Application(object):
                 if (not _azParent.endswith('/')):
                     _azParent += '/'
                 cfg.setValue(CIN_AZURE_PARENTFOLDER, _azParent)
-                cfg.setValue(CIN_S3_PREFIX, '/vsicurl/{}'.format('http://{}.blob.core.windows.net/{}/'.format(in_azure_storage.getAccountName, cfg.getValue('In_S3_Bucket'))))
+                cfg.setValue(CIN_S3_PREFIX, '{}{}'.format(CVSICURL_PREFIX, 'http://{}.blob.core.windows.net/{}/'.format(in_azure_storage.getAccountName, cfg.getValue('In_S3_Bucket'))))
                 if (not in_azure_storage.browseContent(in_s3_bucket, _azParent, in_azure_storage.copyToLocal, exclude_callback)):
                     return(terminate(self._base, eFAIL))
                 if (not _restored):
@@ -4659,6 +4680,10 @@ def threadProxyRaster(req, base, comp, args):
                 finally:
                     if (file_url):
                         file_url.close()
+            elif (input_file.startswith(CVSIS3_PREFIX)):
+                # Short circuit config mode to always be cachingmrf
+                # TODO test this exhaustively
+                bytesAtHeader = 'x'
             else:
                 try:
                     with open(input_file, 'rb') as fptrProxy:
