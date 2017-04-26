@@ -14,4 +14,6 @@ COPY . ${APP_DIR}
 
 WORKDIR ${APP_DIR}
 
+RUN mv OptimizeRasters-Docker.xml OptimizeRasters.xml
+
 ENTRYPOINT ["python", "OptimizeRasters.py"]

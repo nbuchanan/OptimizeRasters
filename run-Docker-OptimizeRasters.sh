@@ -19,5 +19,4 @@ docker run --rm -it \
     -v ${PWD}/${DATA_DIR}:${APP_DIR}/${DATA_DIR} \
     -v ${PWD}/${OUTPUT_DIR}:${APP_DIR}/${OUTPUT_DIR} \
     "${ORGANIZATION}/${IMAGE}" \
-    -config=OptimizeRasters-Docker.xml \
     $*
