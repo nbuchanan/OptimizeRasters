@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-ORGANIZATION=nbuchanan
+ORGANIZATION=nickbuchanan
 IMAGE=optimize-rasters
 APP_DIR=/app
 DATA_DIR=data
