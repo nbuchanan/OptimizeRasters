@@ -45,6 +45,7 @@ More information about installing and updating third-party packages can be found
 * OptimizeRasters can be run from the command line even if ArcGIS is not installed.
 * There are OptimizeRasters versions for both Windows and Linux. 
 * OptimizeRasters can be used with Amazon Web Services Lambda serverless compute service, with some restrictions on data sizes.
+* CleanMRFCache requires the psutil library to be installed (e.g. _pip install psutil_).
 
 ## Resources
 
