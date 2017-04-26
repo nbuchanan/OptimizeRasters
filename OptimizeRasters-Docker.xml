@@ -49,7 +49,7 @@
 
     <!--Output cloud storage type to upload data. Acceptable values are [Amazon, Azure]-->
     <Out_Cloud_Type>amazon</Out_Cloud_Type>
-    <Out_S3_AWS_ProfileName>default</Out_S3_AWS_ProfileName>
+    <Out_S3_AWS_ProfileName></Out_S3_AWS_ProfileName>
     <Out_S3_ID></Out_S3_ID>
     <Out_S3_Secret></Out_S3_Secret>
     <Out_S3_Bucket>Out_BucketName</Out_S3_Bucket>
@@ -64,7 +64,7 @@
 
     <!--Input cloud storage type to process/download data. Acceptable values are [Amazon, Azure]-->
     <In_Cloud_Type>amazon</In_Cloud_Type>
-    <In_S3_AWS_ProfileName>default</In_S3_AWS_ProfileName>
+    <In_S3_AWS_ProfileName></In_S3_AWS_ProfileName>
     <In_S3_ID></In_S3_ID>
     <In_S3_Secret></In_S3_Secret>
     <In_S3_Bucket>In_BucketName</In_S3_Bucket>
