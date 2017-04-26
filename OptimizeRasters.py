@@ -3467,6 +3467,7 @@ def get_vsi_prefix(s3_bucket_object):
     # Use vsis3 approach if bucket is not public
     return '{}{}/'.format(CVSIS3_PREFIX, s3_bucket_object.m_bucketname) if not s3_bucket_object._isBucketPublic else '{}http://{}.{}/'.format(CVSICURL_PREFIX, s3_bucket_object.m_bucketname, CINOUT_S3_DEFAULT_DOMAIN)
 
+
 class Args:
 
     def __init__(self):
@@ -4262,13 +4263,7 @@ class Application(object):
                     cfg.setValue(CIN_S3_PREFIX, '{}http://{}.public.ecstestdrive.com/{}/'.format(CVSICURL_PREFIX,
                         o_S3_storage.bucketupload.connection.aws_access_key_id.split('@')[0], o_S3_storage.m_bucketname))
                 else:   # for all other standard cloud urls
-                    s3_prefix_val = ''
-                    # Use vsis3 approach if bucket is not public
-                    if not o_S3_storage._isBucketPublic:
-                        s3_prefix_val = '{}{}/'.format(CVSIS3_PREFIX, o_S3_storage.m_bucketname)
-                    else:
-                        s3_prefix_val = '{}http://{}.{}/'.format(CVSICURL_PREFIX, o_S3_storage.m_bucketname, CINOUT_S3_DEFAULT_DOMAIN)
-                    cfg.setValue(CIN_S3_PREFIX, s3_prefix_val)
+                    cfg.setValue(CIN_S3_PREFIX, get_vsi_prefix(o_S3_storage))
                 o_S3_storage.inputPath = self._args.output
                 if (not o_S3_storage.getS3Content(o_S3_storage.remote_path, o_S3_storage.S3_copy_to_local, exclude_callback)):
                     self._base.message('Unable to read S3-Content', self._base.const_critical_text)
