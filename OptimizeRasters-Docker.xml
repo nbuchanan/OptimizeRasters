@@ -5,7 +5,7 @@
   <Defaults>
 
     <!-- Override GDAL path -->
-    <GDALPATH>/usr/local/opt/gdal2/bin</GDALPATH>
+    <GDALPATH>/usr/bin</GDALPATH>
 
     <!-- Acceptable modes are [mrf, mrf_jpeg, tif, tif_lzw, tif_jpeg, cachingmrf, clonemrf, splitmrf] -->
     <Mode>rasterproxy</Mode>
