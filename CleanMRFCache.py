@@ -155,7 +155,8 @@ if (space_available == -1):  # an error has occured
 space_to_free = args.size * BYTES_IN_GIGABYTE
 
 if (space_available >= space_to_free):
-    Message('The disk already has the requested free space')
+    Message('The disk already has the requested {} GB free space in {} (currently have {} GB)'.format(args.size,
+           args.input_path, space_available / BYTES_IN_GIGABYTE))
     exit(0)
 
 # setup -mode
