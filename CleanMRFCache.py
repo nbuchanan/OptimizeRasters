@@ -29,9 +29,10 @@ import sys
 import operator
 import argparse
 import os
-import ctypes
-import platform
+import psutil
 
+BYTES_IN_GIGABYTE = 1073741824
+DEFAULT_DESIRED_GB_FREE = 2
 
 def Message(msg, status=0):
     try:
@@ -59,12 +60,7 @@ class Cleaner:
 
     def getFreeDiskSpace(self, input_path):      # static
         try:
-            fbytes = ctypes.c_ulonglong(0)
-            ctypes.windll.kernel32.GetDiskFreeSpaceExW(
-                ctypes.c_wchar_p(input_path),
-                None,
-                None,
-                ctypes.pointer(fbytes))
+            fbytes = psutil.disk_usage(input_path).free
         except:
             return -1
         return fbytes
@@ -116,8 +112,8 @@ parser.add_argument('-ext',
                     help='Extensions to filter-in. e.g. -ext=mrfcache,txt',
                     dest='ext')
 parser.add_argument('-size', type=long,
-                    help='Free size requested in bytes. e.g. -size=1000000',
-                    dest='size', default=2000000000)
+                    help='Free size requested in gigabytes. e.g. -size={}'.format(DEFAULT_DESIRED_GB_FREE),
+                    dest='size', default=DEFAULT_DESIRED_GB_FREE)
 
 log = None
 
@@ -156,8 +152,7 @@ if (space_available == -1):  # an error has occured
     exit(1)
 # ends
 
-space_to_free = args.size * 1000000000
-space_available = space_available.value
+space_to_free = args.size * BYTES_IN_GIGABYTE
 
 if (space_available >= space_to_free):
     Message('The disk already has the requested free space')
