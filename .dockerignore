@@ -1,0 +1,14 @@
+.idea
+Batchfiles
+Documentation
+GDAL
+logs
+output*
+Setup
+tmp
+LICENSE
+*.iml
+*.pyt
+*.pyt.xml
+README.md
+*.sh
